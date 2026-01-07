@@ -1,20 +1,9 @@
-<script setup>
-import Header from './components/layout/Header.vue'
-</script>
-
 <template>
-  <div class="min-h-screen bg-[#0f1416]">
-    <Header />
-    
-    <!-- Main Content Area with top padding for fixed header -->
-    <main class="pt-16 sm:pt-20">
-      <router-view v-slot="{ Component }">
-        <transition name="page" mode="out-in">
-          <component :is="Component" />
-        </transition>
-      </router-view>
-    </main>
-  </div>
+  <router-view v-slot="{ Component }">
+    <transition name="page" mode="out-in">
+      <component :is="Component" />
+    </transition>
+  </router-view>
 </template>
 
 <style>
@@ -32,5 +21,23 @@ import Header from './components/layout/Header.vue'
 .page-leave-to {
   opacity: 0;
   transform: translateY(-20px);
+}
+
+/* Global Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #1a1a1a;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #b8e62e;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #a0d020;
 }
 </style>
