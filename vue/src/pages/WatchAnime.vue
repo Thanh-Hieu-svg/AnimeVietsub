@@ -1,5 +1,6 @@
 <template>
   <div class="max-w-[1280px] mx-auto px-4 sm:px-6 py-6 space-y-6">
+    <AnnouncementPanel />
 
     <!-- PLAYER -->
     <VideoPlayer />
@@ -34,6 +35,7 @@
 </template>
 
 <script setup>
+import AnnouncementPanel from "@/components/widgets/AnnouncementPanel.vue"
 import VideoPlayer from "@/components/watch/VideoPlayer.vue"
 import ServerSelect from "@/components/watch/ServerSelect.vue"
 import EpisodeList from "@/components/common/EpisodeList.vue"

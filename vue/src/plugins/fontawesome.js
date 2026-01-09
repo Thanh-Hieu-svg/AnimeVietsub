@@ -1,10 +1,11 @@
 import { library } from '@fortawesome/fontawesome-svg-core'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
-import { 
+
+import {
   faTrophy,
   faClock,
   faFire,
-  faStar,      
+  faStar,
   faArrowRight,
   faPlay,
   faChevronLeft,
@@ -26,36 +27,70 @@ import {
   faCalendar,
   faClipboardList,
   faChevronDown,
-  faImage,         
-  faEnvelope,      
-  faShield,        
+  faImage,
+  faEnvelope,
+  faShield,
   faArrowUp,
   faCheckCircle,
-  faServer,      
-  faEye,           
-  faComments,      
-  faPaperPlane,    
-  faCommentSlash,  
-  faReply,        
-  faFlag,          
+  faServer,
+  faEye,
+  faComments,
+  faPaperPlane,
+  faCommentSlash,
+  faReply,
+  faFlag,
+  faEyeSlash,
+  faCamera,
+  faPen,
+  faCog,
+  faCalendarAlt,
+  faCalendarDay,
+  faLock,
+  faUnlock,
+  faEdit,
+  faTrash,
+  faBan,
+  faUserPlus,
+  faArrowDown,
+  faMinus,
+  faPlusCircle,
+  faCalendarTimes,
+  faChartLine,
+  faSignOutAlt,
+  faMobileAlt,
+  faHistory,
+  faShieldAlt,
+  faUndo,
+  faSave,
+  faTag,
+  faTags,
+  faCircle,
+  faArrowLeft,
+  faInbox,
+  faPlus,
+  faUserCircle,
+  faUser,
+  faImages,      
+  faAward,     
+  faFolder,    
+  faChartBar,
+  faShuffle
 } from '@fortawesome/free-solid-svg-icons'
 
-
-import { 
-  faHeart as faHeartRegular  
+import {
+  faHeart as faHeartRegular
 } from '@fortawesome/free-regular-svg-icons'
 
-
-import { 
-  faFacebook, 
-  faDiscord 
+import {
+  faFacebook,
+  faDiscord
 } from '@fortawesome/free-brands-svg-icons'
 
 library.add(
   faTrophy,
   faClock,
   faFire,
-  faStar,        
+  faStar,
   faArrowRight,
   faPlay,
   faChevronLeft,
@@ -77,9 +112,9 @@ library.add(
   faCalendar,
   faClipboardList,
   faChevronDown,
-  faImage,         
-  faEnvelope,      
-  faShield,        
+  faImage,
+  faEnvelope,
+  faShield,
   faArrowUp,
   faCheckCircle,
   faServer,
@@ -92,6 +127,42 @@ library.add(
   faHeartRegular,
   faFacebook,
   faDiscord,
+  faEyeSlash,
+  faCamera,
+  faPen,
+  faCog,
+  faCalendarAlt,
+  faCalendarDay,
+  faLock,
+  faUnlock,
+  faEdit,
+  faTrash,
+  faBan,
+  faUserPlus,
+  faArrowDown,
+  faMinus,
+  faPlusCircle,
+  faCalendarTimes,
+  faChartLine,
+  faSignOutAlt,
+  faMobileAlt,
+  faHistory,
+  faShieldAlt,
+  faUndo,
+  faSave,
+  faTag,
+  faTags,
+  faCircle,
+  faArrowLeft,
+  faInbox,
+  faPlus,
+  faUserCircle,
+  faUser,
+  faImages,      
+  faAward,      
+  faFolder,      
+  faChartBar,
+  faShuffle     
 )
 
 export default FontAwesomeIcon

@@ -22,6 +22,14 @@ const items = [
     ],
   },
   {
+    icon: "shuffle",
+    title: "XEM NGẪU NHIÊN",
+    desc: "Khám phá anime mới với thuật toán gợi ý thông minh!",
+    actions: [
+      { label: "KHÁM PHÁ NGAY", type: "random", icon: "play" },
+    ],
+  },
+  {
     icon: "database",
     title: "KHÔI PHỤC DỮ LIỆU",
     desc: "Lấy lịch sử xem & đăng nhập từ tên miền cũ",
@@ -36,16 +44,21 @@ const buttonClass = (type) => {
     danger: "bg-red-500 hover:bg-red-600 hover:shadow-lg hover:shadow-red-500/50",
     facebook: "bg-[#4267B2] hover:bg-[#365899] hover:shadow-lg hover:shadow-blue-500/50",
     discord: "bg-[#5865F2] hover:bg-[#4752C4] hover:shadow-lg hover:shadow-purple-500/50",
+    random: "bg-gradient-to-r from-[#b8e62e] to-[#a0d020] hover:from-[#a0d020] hover:to-[#b8e62e] hover:shadow-lg hover:shadow-[#b8e62e]/50 text-black",
     success: "bg-green-500 hover:bg-green-600 hover:shadow-lg hover:shadow-green-500/50",
   };
   return map[type] || "bg-gray-500";
 };
 
 const iconType = (icon) => {
-  // Mapping icon sang FontAwesome brands hoặc solid
   const brands = ['facebook', 'discord'];
   return brands.includes(icon) ? 'fab' : 'fas';
 };
+
+const handleRandomAnime = () => {
+  // TODO: Navigate to random anime
+  console.log('Opening random anime...')
+}
 </script>
 
 <template>
@@ -79,6 +92,7 @@ const iconType = (icon) => {
         <button
           v-for="(action, i) in item.actions"
           :key="i"
+          @click="item.icon === 'shuffle' ? handleRandomAnime() : null"
           class="rounded-lg px-5 py-2.5 text-sm font-semibold text-white transition-all duration-300 hover:scale-105 active:scale-95 flex items-center gap-2 group/btn"
           :class="buttonClass(action.type)"
         >
@@ -94,7 +108,6 @@ const iconType = (icon) => {
 </template>
 
 <style scoped>
-/* Fade In Animation */
 @keyframes fadeIn {
   from {
     opacity: 0;

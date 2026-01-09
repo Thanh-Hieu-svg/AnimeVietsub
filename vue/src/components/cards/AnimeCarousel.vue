@@ -1,6 +1,6 @@
 <script setup>
 import { Swiper, SwiperSlide } from "swiper/vue";
-import { Navigation } from "swiper/modules";
+import { Navigation, Autoplay } from "swiper/modules";
 
 import "swiper/css";
 import "swiper/css/navigation";
@@ -19,7 +19,7 @@ defineProps({
   <div class="relative group/carousel">
     <!-- Swiper -->
     <Swiper
-      :modules="[Navigation]"
+      :modules="[Navigation, Autoplay]"
       :slides-per-view="2"
       :space-between="16"
       :navigation="{
@@ -31,6 +31,13 @@ defineProps({
         768: { slidesPerView: 4 },
         1024: { slidesPerView: 6 },
       }"
+      :loop="true"
+      :autoplay="{
+        delay: 3000,
+        disableOnInteraction: false,
+        pauseOnMouseEnter: true,
+      }"
+      :speed="1000"
       class="pb-4"
     >
       <SwiperSlide v-for="anime in animes" :key="anime.id">

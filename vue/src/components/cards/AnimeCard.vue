@@ -8,7 +8,15 @@ const props = defineProps({
   },
 });
 
-const rating = computed(() => props.anime.rating?.toFixed(1) ?? "N/A");
+const rating = computed(() => {
+  const ratingValue = props.anime.rating
+  if (ratingValue == null) return "N/A"
+  
+  // Parse to number if it's a string
+  const numRating = typeof ratingValue === 'string' ? parseFloat(ratingValue) : ratingValue
+  
+  return isNaN(numRating) ? "N/A" : numRating.toFixed(1)
+})
 
 const statusLabel = computed(() =>
   props.anime.status === "completed" ? "HOÀN TẤT" : "ĐANG CHIẾU"
