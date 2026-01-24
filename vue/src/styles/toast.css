@@ -1,0 +1,61 @@
+/* Custom Toast Styles */
+:root {
+    --toastify-color-success: #b8e62e;
+    --toastify-color-error: #ef4444;
+    --toastify-color-warning: #f59e0b;
+    --toastify-color-info: #3b82f6;
+}
+
+.Vue-Toastification__toast {
+    font-family: inherit;
+    border-radius: 12px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+    font-size: 14px;
+    padding: 16px;
+    min-height: auto;
+}
+
+.Vue-Toastification__toast--success {
+    background-color: #b8e62e;
+    color: #000;
+    font-weight: 600;
+}
+
+.Vue-Toastification__toast--error {
+    background-color: #ef4444;
+    color: #fff;
+    font-weight: 600;
+}
+
+.Vue-Toastification__toast--warning {
+    background-color: #f59e0b;
+    color: #000;
+    font-weight: 600;
+}
+
+.Vue-Toastification__toast--info {
+    background-color: #3b82f6;
+    color: #fff;
+    font-weight: 600;
+}
+
+/* Close button */
+.Vue-Toastification__close-button {
+    opacity: 0.7;
+    font-size: 20px;
+}
+
+.Vue-Toastification__close-button:hover {
+    opacity: 1;
+}
+
+/* Progress bar */
+.Vue-Toastification__progress-bar {
+    height: 3px;
+}
+
+/* Container position */
+.Vue-Toastification__container.bottom-right {
+    bottom: 1rem;
+    right: 1rem;
+}

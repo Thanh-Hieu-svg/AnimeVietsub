@@ -1,33 +1,70 @@
 <script setup>
 import { ref } from 'vue'
+import { useAuth } from '@/composables/useAuth'
+import { useToast } from 'vue-toastification'
 
 const emit = defineEmits(['toggle'])
+const { isLoading, error, register, clearError } = useAuth()
+const toast = useToast()
 
 const username = ref('')
 const email = ref('')
 const password = ref('')
 const confirmPassword = ref('')
 const agreeTerms = ref(false)
-const isLoading = ref(false)
 
 const handleRegister = async () => {
+  clearError()
+
+  // Validation
   if (password.value !== confirmPassword.value) {
-    alert('Mật khẩu không khớp!')
+    toast.error('Mật khẩu không khớp!')  // ✅ Icon tự động hiện
     return
   }
   if (!agreeTerms.value) {
-    alert('Vui lòng đồng ý điều khoản!')
+    toast.warning('Vui lòng đồng ý điều khoản!')  // ✅ Icon tự động hiện
     return
   }
-  isLoading.value = true
-  setTimeout(() => {
-    isLoading.value = false
-    console.log('Register:', { username: username.value, email: email.value })
-  }, 1500)
+
+  // Call API
+  const result = await register({
+    username: username.value,
+    email: email.value,
+    password: password.value
+  })
+
+  if (result.success) {
+    toast.success('Đăng ký thành công! Vui lòng đăng nhập.', {  // ✅ Icon tự động hiện
+      timeout: 4000
+    })
+    
+    emit('toggle')
+    
+    // Reset form
+    username.value = ''
+    email.value = ''
+    password.value = ''
+    confirmPassword.value = ''
+    agreeTerms.value = false
+  } else {
+    // Hiển thị lỗi từ server
+    if (result.error?.errors) {
+      result.error.errors.forEach(err => {
+        toast.error(err.msg)  // ✅ Icon tự động hiện
+      })
+    } else {
+      toast.error(result.error?.message || 'Đăng ký thất bại')  // ✅ Icon tự động hiện
+    }
+  }
 }
 
-const registerWithGoogle = () => console.log('Google')
-const registerWithFacebook = () => console.log('Facebook')
+const registerWithGoogle = () => {
+  toast.info('Tính năng đang phát triển')  // ✅ Icon tự động hiện
+}
+
+const registerWithFacebook = () => {
+  toast.info('Tính năng đang phát triển')  // ✅ Icon tự động hiện
+}
 </script>
 
 <template>
@@ -38,7 +75,6 @@ const registerWithFacebook = () => console.log('Facebook')
     <!-- Main Card -->
     <div class="relative bg-gradient-to-br from-[#1a1a1a] via-[#1f1f1f] to-[#0f1416] rounded-3xl shadow-2xl overflow-hidden border border-gray-800/50 backdrop-blur-xl">
       
-      <!-- Form Only -->
       <div class="flex flex-col justify-center p-8 sm:p-10">
         <div class="w-full max-w-sm mx-auto space-y-5">
           
@@ -53,7 +89,7 @@ const registerWithFacebook = () => console.log('Facebook')
             <p class="text-gray-400 text-sm">Chỉ mất 30 giây thôi! ⚡</p>
           </div>
 
-          <!-- Social Buttons First -->
+          <!-- Social Buttons -->
           <div class="grid grid-cols-2 gap-3 animate-fade-in" style="animation-delay: 0.2s">
             <button @click="registerWithGoogle" class="flex items-center justify-center gap-2 bg-white hover:bg-gray-100 text-gray-800 font-bold py-2.5 px-3 rounded-xl transition-all duration-300 hover:scale-105 active:scale-95 shadow-lg">
               <svg class="w-5 h-5" viewBox="0 0 24 24">
@@ -109,7 +145,7 @@ const registerWithFacebook = () => console.log('Facebook')
                 <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
                   <font-awesome-icon icon="shield" class="text-gray-500 group-hover:text-[#b8e62e] transition-colors text-sm" />
                 </div>
-                <input v-model="password" type="password" required placeholder="Tối thiểu 8 ký tự" class="w-full bg-[#2a2a2a] border border-gray-700 text-white rounded-xl pl-10 pr-3.5 py-2.5 focus:outline-none focus:border-[#b8e62e] focus:ring-2 focus:ring-[#b8e62e]/20 transition-all placeholder-gray-500 hover:border-gray-600 text-sm" />
+                <input v-model="password" type="password" required placeholder="Tối thiểu 6 ký tự" class="w-full bg-[#2a2a2a] border border-gray-700 text-white rounded-xl pl-10 pr-3.5 py-2.5 focus:outline-none focus:border-[#b8e62e] focus:ring-2 focus:ring-[#b8e62e]/20 transition-all placeholder-gray-500 hover:border-gray-600 text-sm" />
               </div>
             </div>
 
@@ -153,7 +189,6 @@ const registerWithFacebook = () => console.log('Facebook')
 </template>
 
 <style scoped>
-/* Animated Border Pulse */
 @keyframes border-pulse {
   0%, 100% {
     opacity: 0.75;

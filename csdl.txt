@@ -1,0 +1,368 @@
+-- ============================================
+-- HỆ THỐNG QUẢN LÝ XEM PHIM - MYSQL SCHEMA
+-- ============================================
+
+-- Bảng users: lưu thông tin người dùng
+CREATE TABLE users (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    username VARCHAR(50) UNIQUE NOT NULL,
+    email VARCHAR(100) UNIQUE NOT NULL,
+    password VARCHAR(255) NOT NULL,
+    role ENUM('user','admin') DEFAULT 'user',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    deleted_at TIMESTAMP NULL
+);
+
+-- Bảng permissions: danh sách các quyền trong hệ thống
+CREATE TABLE permissions (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(50) UNIQUE NOT NULL
+);
+
+-- Bảng role_permissions: gán quyền cho từng role
+CREATE TABLE role_permissions (
+    role ENUM('user','admin'),
+    permission_id INT,
+    PRIMARY KEY (role, permission_id),
+    FOREIGN KEY (permission_id) REFERENCES permissions(id)
+);
+
+-- Bảng countries: quốc gia sản xuất phim
+CREATE TABLE countries (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(100) UNIQUE NOT NULL
+);
+
+-- Bảng movies: lưu thông tin phim
+CREATE TABLE movies (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    title VARCHAR(255) NOT NULL,
+    description TEXT,
+    poster VARCHAR(255),
+    trailer_url VARCHAR(255),
+    release_year INT,
+    duration INT,
+    views INT DEFAULT 0,
+    avg_rating DECIMAL(3,2) DEFAULT 0,
+    status ENUM('ongoing','completed') DEFAULT 'ongoing',
+    country_id INT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    deleted_at TIMESTAMP NULL,
+    FOREIGN KEY (country_id) REFERENCES countries(id)
+);
+
+-- Bảng seasons: lưu các mùa của phim
+CREATE TABLE seasons (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    movie_id INT NOT NULL,
+    season_number INT NOT NULL,
+    title VARCHAR(255),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE (movie_id, season_number),
+    FOREIGN KEY (movie_id) REFERENCES movies(id) ON DELETE CASCADE
+);
+
+-- Bảng episodes: lưu các tập phim
+CREATE TABLE episodes (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    movie_id INT NOT NULL,
+    season_id INT,
+    episode_number INT NOT NULL,
+    title VARCHAR(255),
+    video_url VARCHAR(255) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (movie_id) REFERENCES movies(id) ON DELETE CASCADE,
+    FOREIGN KEY (season_id) REFERENCES seasons(id) ON DELETE CASCADE
+);
+
+-- Bảng genres: danh sách thể loại phim
+CREATE TABLE genres (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(100) UNIQUE NOT NULL
+);
+
+-- Bảng movie_genres: liên kết phim và thể loại (N-N)
+CREATE TABLE movie_genres (
+    movie_id INT,
+    genre_id INT,
+    PRIMARY KEY (movie_id, genre_id),
+    FOREIGN KEY (movie_id) REFERENCES movies(id) ON DELETE CASCADE,
+    FOREIGN KEY (genre_id) REFERENCES genres(id) ON DELETE CASCADE
+);
+
+-- Bảng languages: ngôn ngữ phim / phụ đề
+CREATE TABLE languages (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(50) UNIQUE NOT NULL
+);
+
+-- Bảng movie_languages: phim hỗ trợ những ngôn ngữ nào
+CREATE TABLE movie_languages (
+    movie_id INT,
+    language_id INT,
+    PRIMARY KEY (movie_id, language_id),
+    FOREIGN KEY (movie_id) REFERENCES movies(id) ON DELETE CASCADE,
+    FOREIGN KEY (language_id) REFERENCES languages(id) ON DELETE CASCADE
+);
+
+-- Bảng people: lưu diễn viên / đạo diễn
+CREATE TABLE people (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    birth_date DATE,
+    bio TEXT
+);
+
+-- Bảng movie_cast: gán diễn viên / đạo diễn cho phim
+CREATE TABLE movie_cast (
+    movie_id INT,
+    person_id INT,
+    role ENUM('actor','director') NOT NULL,
+    character_name VARCHAR(255),
+    PRIMARY KEY (movie_id, person_id, role),
+    FOREIGN KEY (movie_id) REFERENCES movies(id) ON DELETE CASCADE,
+    FOREIGN KEY (person_id) REFERENCES people(id) ON DELETE CASCADE
+);
+
+-- Bảng video_qualities: các độ phân giải video
+CREATE TABLE video_qualities (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    episode_id INT,
+    quality ENUM('360p','480p','720p','1080p','4K'),
+    video_url VARCHAR(255),
+    FOREIGN KEY (episode_id) REFERENCES episodes(id) ON DELETE CASCADE
+);
+
+-- Bảng subtitles: phụ đề theo ngôn ngữ
+CREATE TABLE subtitles (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    episode_id INT,
+    language_id INT,
+    subtitle_url VARCHAR(255),
+    FOREIGN KEY (episode_id) REFERENCES episodes(id) ON DELETE CASCADE,
+    FOREIGN KEY (language_id) REFERENCES languages(id)
+);
+
+-- Bảng comments: người dùng bình luận phim
+CREATE TABLE comments (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT,
+    movie_id INT,
+    parent_id INT NULL,
+    content TEXT NOT NULL,
+    status ENUM('active', 'hidden', 'reported') DEFAULT 'active',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    deleted_at TIMESTAMP NULL,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (movie_id) REFERENCES movies(id) ON DELETE CASCADE,
+    FOREIGN KEY (parent_id) REFERENCES comments(id) ON DELETE CASCADE
+);
+
+-- Bảng ratings: người dùng đánh giá phim (1–5 sao)
+CREATE TABLE ratings (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT,
+    movie_id INT,
+    rating INT CHECK (rating BETWEEN 1 AND 5),
+    UNIQUE (user_id, movie_id),
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (movie_id) REFERENCES movies(id) ON DELETE CASCADE
+);
+
+-- Bảng favorites: danh sách phim yêu thích
+CREATE TABLE favorites (
+    user_id INT,
+    movie_id INT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (user_id, movie_id),
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (movie_id) REFERENCES movies(id) ON DELETE CASCADE
+);
+
+-- Bảng watch_history: lịch sử xem phim
+CREATE TABLE watch_history (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT,
+    episode_id INT,
+    progress_seconds INT DEFAULT 0,
+    completed BOOLEAN DEFAULT FALSE,
+    watched_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (episode_id) REFERENCES episodes(id) ON DELETE CASCADE
+);
+
+-- Bảng tags: hashtag cho phim
+CREATE TABLE tags (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(50) UNIQUE NOT NULL
+);
+
+-- Bảng movie_tags: liên kết phim và tag
+CREATE TABLE movie_tags (
+    movie_id INT,
+    tag_id INT,
+    PRIMARY KEY (movie_id, tag_id),
+    FOREIGN KEY (movie_id) REFERENCES movies(id) ON DELETE CASCADE,
+    FOREIGN KEY (tag_id) REFERENCES tags(id) ON DELETE CASCADE
+);
+
+-- Bảng notifications: thông báo cho người dùng
+CREATE TABLE notifications (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    type ENUM('new_episode', 'new_comment', 'system') NOT NULL,
+    title VARCHAR(255),
+    content TEXT,
+    link VARCHAR(255),
+    is_read BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+-- Bảng audit_logs: nhật ký hệ thống
+CREATE TABLE audit_logs (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT,
+    action VARCHAR(100) NOT NULL,
+    table_name VARCHAR(50),
+    record_id INT,
+    old_value JSON,
+    new_value JSON,
+    ip_address VARCHAR(45),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
+);
+
+-- ============================================
+-- INDEXES - TỐI ƯU HÓA TRUY VẤN
+-- ============================================
+
+CREATE INDEX idx_movie_title ON movies(title);
+CREATE INDEX idx_movie_views ON movies(views);
+CREATE INDEX idx_release_year ON movies(release_year);
+CREATE INDEX idx_movies_deleted ON movies(deleted_at);
+CREATE INDEX idx_watch_user_episode ON watch_history(user_id, episode_id);
+CREATE INDEX idx_comment_parent ON comments(parent_id);
+CREATE INDEX idx_notif_user_read ON notifications(user_id, is_read);
+CREATE INDEX idx_audit_user_action ON audit_logs(user_id, action);
+
+-- Full-text search cho tìm kiếm phim
+ALTER TABLE movies ADD FULLTEXT INDEX ft_title_desc (title, description);
+
+-- ============================================
+-- VIEWS - TRUY VẤN THÔNG MINH
+-- ============================================
+
+-- View: danh sách phim hot
+CREATE VIEW v_hot_movies AS
+SELECT id, title, views, avg_rating
+FROM movies
+WHERE deleted_at IS NULL
+ORDER BY views DESC;
+
+-- View: rating trung bình của phim
+CREATE VIEW v_movie_rating AS
+SELECT movie_id, AVG(rating) AS avg_rating, COUNT(*) AS total_ratings
+FROM ratings
+GROUP BY movie_id;
+
+-- View: phim mới cập nhật
+CREATE VIEW v_latest_movies AS
+SELECT m.id, m.title, m.poster, m.created_at
+FROM movies m
+WHERE m.deleted_at IS NULL
+ORDER BY m.created_at DESC
+LIMIT 20;
+
+-- ============================================
+-- TRIGGERS - TỰ ĐỘNG HÓA
+-- ============================================
+
+-- Trigger: tự động tăng lượt xem (1 lần/ngày/user)
+DELIMITER $$
+CREATE TRIGGER trg_update_views
+AFTER INSERT ON watch_history
+FOR EACH ROW
+BEGIN
+    DECLARE last_view DATE;
+    
+    SELECT DATE(watched_at) INTO last_view
+    FROM watch_history
+    WHERE user_id = NEW.user_id 
+      AND episode_id = NEW.episode_id
+      AND id < NEW.id
+    ORDER BY watched_at DESC
+    LIMIT 1;
+    
+    IF last_view IS NULL OR last_view < CURDATE() THEN
+        UPDATE movies m
+        JOIN episodes e ON e.movie_id = m.id
+        SET m.views = m.views + 1
+        WHERE e.id = NEW.episode_id;
+    END IF;
+END$$
+DELIMITER ;
+
+-- Trigger: tự động cập nhật rating trung bình
+DELIMITER $$
+CREATE TRIGGER trg_update_rating_insert
+AFTER INSERT ON ratings
+FOR EACH ROW
+BEGIN
+    UPDATE movies
+    SET avg_rating = (
+        SELECT AVG(rating) FROM ratings WHERE movie_id = NEW.movie_id
+    )
+    WHERE id = NEW.movie_id;
+END$$
+
+CREATE TRIGGER trg_update_rating_update
+AFTER UPDATE ON ratings
+FOR EACH ROW
+BEGIN
+    UPDATE movies
+    SET avg_rating = (
+        SELECT AVG(rating) FROM ratings WHERE movie_id = NEW.movie_id
+    )
+    WHERE id = NEW.movie_id;
+END$$
+
+CREATE TRIGGER trg_update_rating_delete
+AFTER DELETE ON ratings
+FOR EACH ROW
+BEGIN
+    UPDATE movies
+    SET avg_rating = COALESCE((
+        SELECT AVG(rating) FROM ratings WHERE movie_id = OLD.movie_id
+    ), 0)
+    WHERE id = OLD.movie_id;
+END$$
+DELIMITER ;
+
+-- ============================================
+-- DỮ LIỆU MẪU
+-- ============================================
+
+-- Thêm permissions mẫu
+INSERT INTO permissions (name) VALUES 
+('view_movies'), ('manage_movies'), ('manage_users'), 
+('delete_comments'), ('manage_system');
+
+-- Gán quyền cho role
+INSERT INTO role_permissions (role, permission_id) VALUES
+('user', 1),
+('admin', 1), ('admin', 2), ('admin', 3), ('admin', 4), ('admin', 5);
+
+-- Thêm countries mẫu
+INSERT INTO countries (name) VALUES 
+('Việt Nam'), ('Hàn Quốc'), ('Nhật Bản'), ('Trung Quốc'), 
+('Mỹ'), ('Thái Lan'), ('Anh');
+
+-- Thêm genres mẫu
+INSERT INTO genres (name) VALUES 
+('Hành Động'), ('Hài'), ('Tình Cảm'), ('Kinh Dị'), 
+('Khoa Học Viễn Tưởng'), ('Anime'), ('Tâm Lý'), ('Phiêu Lưu');
+
+-- Thêm languages mẫu
+INSERT INTO languages (name) VALUES 
+('Tiếng Việt'), ('English'), ('한국어'), ('日本語'), ('中文');

@@ -1,416 +1,409 @@
-<template>
-  <header class="fixed top-0 left-0 right-0 bg-[#0f1416] shadow-lg z-50">
-    <div class="max-w-[1280px] mx-auto px-4 sm:px-6 py-3 sm:py-4">
-      <div class="flex items-center justify-between gap-4">
-        <!-- Logo with animation -->
-        <div class="flex-shrink-0 animate-slide-in-left">
-          <router-link to="/">
-            <img 
-              src="../../assets/images/logo.png" 
-              alt="AnimeVib Logo" 
-              class="h-8 sm:h-10 cursor-pointer hover:scale-110 transition-transform duration-300" 
-            />
-          </router-link>
-        </div>
+<script setup>
+import { ref, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
+import { useAuthStore } from '@/stores/auth.store'
+import { useToast } from 'vue-toastification'  // ✅ Thêm import toast
 
-        <!-- Desktop Navigation Menu -->
-        <nav class="hidden lg:flex items-center gap-6 flex-1">
-          <router-link to="/" class="nav-item animate-fade-in" style="animation-delay: 0.1s">
+const router = useRouter()
+const authStore = useAuthStore()
+const toast = useToast()  // ✅ Khởi tạo toast
+
+const isMobileMenuOpen = ref(false)
+const openDesktopDropdown = ref(null)
+const openMobileDropdown = ref(null)
+const isUserDropdownOpen = ref(false)
+
+// Load user from storage on mount
+onMounted(() => {
+  authStore.restoreSession()
+})
+
+// ✅ Logout function với toast
+const handleLogout = () => {
+  authStore.logout()
+  isUserDropdownOpen.value = false
+  
+  // ✅ Hiển thị toast thông báo
+  toast.success('Đăng xuất thành công!')
+  
+  // ✅ Redirect sau 500ms
+  setTimeout(() => {
+    router.push('/')
+  }, 500)
+}
+
+const toggleMobileMenu = () => {
+  isMobileMenuOpen.value = !isMobileMenuOpen.value
+}
+
+const toggleDesktopDropdown = (dropdown) => {
+  openDesktopDropdown.value = openDesktopDropdown.value === dropdown ? null : dropdown
+}
+
+const toggleMobileDropdown = (dropdown) => {
+  openMobileDropdown.value = openMobileDropdown.value === dropdown ? null : dropdown
+}
+
+const toggleUserDropdown = () => {
+  isUserDropdownOpen.value = !isUserDropdownOpen.value
+}
+</script>
+
+<template>
+  <header class="fixed top-0 left-0 right-0 z-50 bg-[#1a1a1a]/95 backdrop-blur-md border-b border-gray-800/50">
+    <nav class="mx-auto max-w-[1280px] px-4 sm:px-6 lg:px-8">
+      <div class="flex justify-between items-center h-16">
+        
+        <!-- Logo -->
+        <router-link 
+          to="/" 
+          class="flex items-center space-x-2 group shrink-0"
+        >
+          <img 
+            src="@/assets/images/logo.png"
+            alt="Logo" 
+            class="h-8 w-auto transition-transform duration-300 group-hover:scale-110" 
+          />
+        </router-link>
+
+        <!-- Desktop Navigation - Căn giữa -->
+        <div class="hidden lg:flex items-center space-x-8 flex-1 justify-center">
+          <router-link 
+            to="/" 
+            class="text-gray-300 hover:text-[#b8e62e] font-semibold text-sm tracking-wide transition-colors duration-300"
+          >
             TRANG CHỦ
           </router-link>
           
-          <div class="relative group animate-fade-in" style="animation-delay: 0.2s">
-            <button class="nav-item flex items-center gap-1">
-              DẠNG ANIME
-              <font-awesome-icon icon="chevron-down" class="text-xs transition-transform duration-300 group-hover:rotate-180" />
-            </button>
-            <div class="dropdown-menu">
-              <a href="#" class="dropdown-item">
-                <font-awesome-icon icon="film" class="text-xs mr-2" />
-                TV Series
-              </a>
-              <a href="#" class="dropdown-item">
-                <font-awesome-icon icon="film" class="text-xs mr-2" />
-                Movie
-              </a>
-              <a href="#" class="dropdown-item">
-                <font-awesome-icon icon="play-circle" class="text-xs mr-2" />
-                OVA
-              </a>
-            </div>
-          </div>
-
-          <div class="relative group animate-fade-in" style="animation-delay: 0.3s">
-            <button class="nav-item flex items-center gap-1">
-              TOP ANIME
-              <font-awesome-icon icon="chevron-down" class="text-xs transition-transform duration-300 group-hover:rotate-180" />
-            </button>
-            <div class="dropdown-menu">
-              <a href="#" class="dropdown-item">
-                <font-awesome-icon icon="trophy" class="text-xs mr-2" />
-                Top 100
-              </a>
-              <a href="#" class="dropdown-item">
-                <font-awesome-icon icon="fire" class="text-xs mr-2" />
-                Phổ biến
-              </a>
-            </div>
-          </div>
-
-          <div class="relative group animate-fade-in" style="animation-delay: 0.4s">
-            <button class="nav-item flex items-center gap-1">
+          <!-- Thể Loại Dropdown -->
+          <div class="relative">
+            <button 
+              @click="toggleDesktopDropdown('genre')" 
+              class="text-gray-300 hover:text-[#b8e62e] font-semibold text-sm tracking-wide transition-colors duration-300 flex items-center gap-1.5"
+            >
               THỂ LOẠI
-              <font-awesome-icon icon="chevron-down" class="text-xs transition-transform duration-300 group-hover:rotate-180" />
+              <font-awesome-icon 
+                :icon="openDesktopDropdown === 'genre' ? 'chevron-up' : 'chevron-down'" 
+                class="text-xs transition-transform duration-300" 
+              />
             </button>
-            <div class="dropdown-menu">
-              <a href="#" class="dropdown-item">Action</a>
-              <a href="#" class="dropdown-item">Romance</a>
-              <a href="#" class="dropdown-item">Comedy</a>
-              <a href="#" class="dropdown-item">Drama</a>
-            </div>
+            <transition name="slide-down">
+              <div 
+                v-if="openDesktopDropdown === 'genre'" 
+                class="absolute left-0 mt-3 w-48 bg-[#2a2a2a] rounded-xl shadow-2xl border border-gray-700/50 py-2 z-50"
+              >
+                <a href="#" class="block px-4 py-2.5 text-gray-300 text-sm hover:bg-[#3a3a3a] hover:text-[#b8e62e] hover:pl-5 transition-all duration-300">Hành Động</a>
+                <a href="#" class="block px-4 py-2.5 text-gray-300 text-sm hover:bg-[#3a3a3a] hover:text-[#b8e62e] hover:pl-5 transition-all duration-300">Hài</a>
+                <a href="#" class="block px-4 py-2.5 text-gray-300 text-sm hover:bg-[#3a3a3a] hover:text-[#b8e62e] hover:pl-5 transition-all duration-300">Tình Cảm</a>
+                <a href="#" class="block px-4 py-2.5 text-gray-300 text-sm hover:bg-[#3a3a3a] hover:text-[#b8e62e] hover:pl-5 transition-all duration-300">Kinh Dị</a>
+              </div>
+            </transition>
           </div>
 
-          <div class="relative group animate-fade-in" style="animation-delay: 0.5s">
-            <button class="nav-item flex items-center gap-1">
-              SEASON
-              <font-awesome-icon icon="chevron-down" class="text-xs transition-transform duration-300 group-hover:rotate-180" />
+          <!-- Mùa Phim Dropdown -->
+          <div class="relative">
+            <button 
+              @click="toggleDesktopDropdown('season')" 
+              class="text-gray-300 hover:text-[#b8e62e] font-semibold text-sm tracking-wide transition-colors duration-300 flex items-center gap-1.5"
+            >
+              MÙA PHIM
+              <font-awesome-icon 
+                :icon="openDesktopDropdown === 'season' ? 'chevron-up' : 'chevron-down'" 
+                class="text-xs transition-transform duration-300" 
+              />
             </button>
-            <div class="dropdown-menu">
-              <a href="#" class="dropdown-item">
-                <font-awesome-icon icon="calendar" class="text-xs mr-2" />
-                Mùa Đông
-              </a>
-              <a href="#" class="dropdown-item">
-                <font-awesome-icon icon="calendar" class="text-xs mr-2" />
-                Mùa Xuân
-              </a>
-              <a href="#" class="dropdown-item">
-                <font-awesome-icon icon="calendar" class="text-xs mr-2" />
-                Mùa Hè
-              </a>
-              <a href="#" class="dropdown-item">
-                <font-awesome-icon icon="calendar" class="text-xs mr-2" />
-                Mùa Thu
-              </a>
-            </div>
+            <transition name="slide-down">
+              <div 
+                v-if="openDesktopDropdown === 'season'" 
+                class="absolute left-0 mt-3 w-48 bg-[#2a2a2a] rounded-xl shadow-2xl border border-gray-700/50 py-2 z-50"
+              >
+                <a href="#" class="block px-4 py-2.5 text-gray-300 text-sm hover:bg-[#3a3a3a] hover:text-[#b8e62e] hover:pl-5 transition-all duration-300">Mùa Đông</a>
+                <a href="#" class="block px-4 py-2.5 text-gray-300 text-sm hover:bg-[#3a3a3a] hover:text-[#b8e62e] hover:pl-5 transition-all duration-300">Mùa Xuân</a>
+                <a href="#" class="block px-4 py-2.5 text-gray-300 text-sm hover:bg-[#3a3a3a] hover:text-[#b8e62e] hover:pl-5 transition-all duration-300">Mùa Hè</a>
+                <a href="#" class="block px-4 py-2.5 text-gray-300 text-sm hover:bg-[#3a3a3a] hover:text-[#b8e62e] hover:pl-5 transition-all duration-300">Mùa Thu</a>
+              </div>
+            </transition>
           </div>
 
-          <router-link to="/lich-chieu" class="nav-item animate-fade-in" style="animation-delay: 0.7s">
+          <router-link 
+            to="/thu-vien" 
+            class="text-gray-300 hover:text-[#b8e62e] font-semibold text-sm tracking-wide transition-colors duration-300"
+          >
+            THƯ VIỆN
+          </router-link>
+          
+          <router-link 
+            to="/lich-chieu" 
+            class="text-gray-300 hover:text-[#b8e62e] font-semibold text-sm tracking-wide transition-colors duration-300"
+          >
             LỊCH CHIẾU
           </router-link>
-        </nav>
+        </div>
 
-        <!-- Desktop Search and Login -->
-        <div class="hidden md:flex items-center gap-3 lg:gap-4 animate-slide-in-right">
-          <!-- Search Box -->
-          <div class="hidden lg:flex items-center bg-[#2a2a2a] rounded px-4 py-2 gap-3 min-w-[200px] xl:min-w-[300px] hover:bg-[#3a3a3a] transition-all duration-300 hover:shadow-lg hover:shadow-[#b8e62e]/20">
-            <font-awesome-icon icon="search" class="text-gray-500 animate-pulse-slow" />
-            <input 
-              type="text" 
-              placeholder="Tìm tên tiếng nhật, anh, việt"
-              class="bg-transparent border-none outline-none text-white text-sm flex-1 placeholder-gray-600"
-            />
+        <!-- Right Side - Login/Avatar -->
+        <div class="hidden lg:flex items-center shrink-0">
+          <!-- Login Button / User Avatar -->
+          <div v-if="!authStore.isAuthenticated">
+            <router-link 
+              to="/auth" 
+              class="bg-gradient-to-r from-red-600 to-red-500 hover:from-red-500 hover:to-red-600 text-white px-6 py-2.5 rounded-lg font-bold text-sm transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-red-500/50 active:scale-95"
+            >
+              ĐĂNG NHẬP
+            </router-link>
           </div>
-
-          <!-- Search Icon for tablet -->
-          <button class="lg:hidden text-white hover:text-[#b8e62e] transition-all duration-300 hover:scale-110" @click="toggleSearch">
-            <font-awesome-icon icon="search" class="w-5 h-5" />
-          </button>
-
-          <!-- Login Button - Changed to router-link -->
-          <router-link 
-            to="/auth" 
-            class="bg-[#d32f2f] hover:bg-[#b71c1c] text-white px-4 sm:px-6 lg:px-8 py-2 sm:py-2.5 rounded font-semibold text-xs sm:text-sm transition-all duration-300 whitespace-nowrap hover:scale-105 hover:shadow-lg hover:shadow-[#d32f2f]/50 active:scale-95 inline-block text-center"
-          >
-            Đăng nhập
-          </router-link>
+          
+          <div v-else class="relative">
+            <button 
+              @click="toggleUserDropdown" 
+              class="w-10 h-10 rounded-full bg-gradient-to-r from-[#b8e62e] to-[#a0d020] text-black font-black text-lg flex items-center justify-center hover:scale-110 transition-transform duration-300 hover:shadow-lg hover:shadow-[#b8e62e]/50"
+            >
+              {{ authStore.avatarLetter }}
+            </button>
+            <transition name="slide-down">
+              <div 
+                v-if="isUserDropdownOpen" 
+                class="absolute right-0 mt-3 w-56 bg-[#2a2a2a] rounded-xl shadow-2xl border border-gray-700/50 py-2 z-50"
+              >
+                <div class="px-4 py-3 border-b border-gray-700/50">
+                  <p class="text-white font-bold text-sm truncate">{{ authStore.user.username }}</p>
+                  <p class="text-gray-400 text-xs truncate">{{ authStore.user.email }}</p>
+                </div>
+                <router-link 
+                  to="/profile" 
+                  class="flex items-center gap-3 px-4 py-2.5 text-gray-300 text-sm hover:bg-[#3a3a3a] hover:text-[#b8e62e] transition-all duration-300"
+                >
+                  <font-awesome-icon icon="user" class="text-sm w-4" />
+                  Trang cá nhân
+                </router-link>
+                <router-link 
+                  to="/favorites" 
+                  class="flex items-center gap-3 px-4 py-2.5 text-gray-300 text-sm hover:bg-[#3a3a3a] hover:text-[#b8e62e] transition-all duration-300"
+                >
+                  <font-awesome-icon icon="heart" class="text-sm w-4" />
+                  Yêu thích
+                </router-link>
+                <router-link 
+                  to="/history" 
+                  class="flex items-center gap-3 px-4 py-2.5 text-gray-300 text-sm hover:bg-[#3a3a3a] hover:text-[#b8e62e] transition-all duration-300"
+                >
+                  <font-awesome-icon icon="clock" class="text-sm w-4" />
+                  Lịch sử
+                </router-link>
+                <router-link 
+                  v-if="authStore.isAdmin" 
+                  to="/admin" 
+                  class="flex items-center gap-3 px-4 py-2.5 text-[#b8e62e] text-sm hover:bg-[#3a3a3a] transition-all duration-300"
+                >
+                  <font-awesome-icon icon="shield" class="text-sm w-4" />
+                  Quản trị
+                </router-link>
+                <div class="border-t border-gray-700/50 mt-2 pt-2">
+                  <button 
+                    @click="handleLogout" 
+                    class="flex items-center gap-3 px-4 py-2.5 text-red-400 hover:text-red-300 hover:bg-[#3a3a3a] text-sm transition-all duration-300 w-full text-left"
+                  >
+                    <font-awesome-icon icon="sign-out-alt" class="text-sm w-4" />
+                    Đăng xuất
+                  </button>
+                </div>
+              </div>
+            </transition>
+          </div>
         </div>
 
         <!-- Mobile Menu Button -->
         <button 
-          class="md:hidden text-white p-2 hover:text-[#b8e62e] transition-all duration-300 hover:scale-110 active:scale-95"
-          @click="toggleMobileMenu"
+          @click="toggleMobileMenu" 
+          class="lg:hidden p-2 text-white hover:text-[#b8e62e] transition-colors duration-300"
         >
-          <font-awesome-icon v-if="!isMobileMenuOpen" icon="bars" class="w-6 h-6 animate-fade-in" />
-          <font-awesome-icon v-else icon="times" class="w-6 h-6 animate-rotate-in" />
+          <font-awesome-icon 
+            :icon="isMobileMenuOpen ? 'times' : 'bars'" 
+            class="text-2xl" 
+          />
         </button>
       </div>
 
-      <!-- Mobile Search Bar (Expandable) -->
+      <!-- Mobile Menu -->
       <transition name="slide-down">
-        <div v-if="isSearchOpen" class="lg:hidden mt-3 pb-1">
-          <div class="flex items-center bg-[#2a2a2a] rounded px-4 py-2 gap-3 animate-scale-in">
-            <font-awesome-icon icon="search" class="text-gray-500" />
-            <input 
-              type="text" 
-              placeholder="Tìm kiếm anime..."
-              class="bg-transparent border-none outline-none text-white text-sm flex-1 placeholder-gray-600"
-              ref="mobileSearchInput"
-            />
+        <div 
+          v-if="isMobileMenuOpen" 
+          class="lg:hidden border-t border-gray-800/50 py-4 space-y-2 max-h-[calc(100vh-4rem)] overflow-y-auto"
+        >
+          <router-link 
+            to="/" 
+            class="block px-4 py-3 text-gray-300 hover:bg-[#2a2a2a] hover:text-[#b8e62e] font-semibold text-sm tracking-wide transition-all duration-300 rounded-lg animate-slide-in-left"
+          >
+            TRANG CHỦ
+          </router-link>
+
+          <!-- Mobile Thể Loại -->
+          <div class="animate-slide-in-left" style="animation-delay: 0.1s">
+            <button 
+              @click="toggleMobileDropdown('genre')" 
+              class="w-full flex items-center justify-between px-4 py-3 text-gray-300 hover:bg-[#2a2a2a] hover:text-[#b8e62e] font-semibold text-sm tracking-wide transition-all duration-300 rounded-lg"
+            >
+              <span>THỂ LOẠI</span>
+              <font-awesome-icon 
+                :icon="openMobileDropdown === 'genre' ? 'chevron-up' : 'chevron-down'" 
+                class="text-xs transition-transform duration-300" 
+              />
+            </button>
+            <transition name="slide-down">
+              <div v-if="openMobileDropdown === 'genre'" class="pl-4 mt-1 space-y-1">
+                <a href="#" class="block px-4 py-2.5 text-gray-400 text-sm hover:bg-[#2a2a2a] hover:text-[#b8e62e] transition-all duration-300 rounded-lg animate-fade-in">Hành Động</a>
+                <a href="#" class="block px-4 py-2.5 text-gray-400 text-sm hover:bg-[#2a2a2a] hover:text-[#b8e62e] transition-all duration-300 rounded-lg animate-fade-in" style="animation-delay: 0.05s">Hài</a>
+                <a href="#" class="block px-4 py-2.5 text-gray-400 text-sm hover:bg-[#2a2a2a] hover:text-[#b8e62e] transition-all duration-300 rounded-lg animate-fade-in" style="animation-delay: 0.1s">Tình Cảm</a>
+                <a href="#" class="block px-4 py-2.5 text-gray-400 text-sm hover:bg-[#2a2a2a] hover:text-[#b8e62e] transition-all duration-300 rounded-lg animate-fade-in" style="animation-delay: 0.15s">Kinh Dị</a>
+              </div>
+            </transition>
+          </div>
+
+          <!-- Mobile Mùa Phim -->
+          <div class="animate-slide-in-left" style="animation-delay: 0.2s">
+            <button 
+              @click="toggleMobileDropdown('season')" 
+              class="w-full flex items-center justify-between px-4 py-3 text-gray-300 hover:bg-[#2a2a2a] hover:text-[#b8e62e] font-semibold text-sm tracking-wide transition-all duration-300 rounded-lg"
+            >
+              <span>MÙA PHIM</span>
+              <font-awesome-icon 
+                :icon="openMobileDropdown === 'season' ? 'chevron-up' : 'chevron-down'" 
+                class="text-xs transition-transform duration-300" 
+              />
+            </button>
+            <transition name="slide-down">
+              <div v-if="openMobileDropdown === 'season'" class="pl-4 mt-1 space-y-1">
+                <a href="#" class="block px-4 py-2.5 text-gray-400 text-sm hover:bg-[#2a2a2a] hover:text-[#b8e62e] transition-all duration-300 rounded-lg animate-fade-in">Mùa Đông</a>
+                <a href="#" class="block px-4 py-2.5 text-gray-400 text-sm hover:bg-[#2a2a2a] hover:text-[#b8e62e] transition-all duration-300 rounded-lg animate-fade-in" style="animation-delay: 0.05s">Mùa Xuân</a>
+                <a href="#" class="block px-4 py-2.5 text-gray-400 text-sm hover:bg-[#2a2a2a] hover:text-[#b8e62e] transition-all duration-300 rounded-lg animate-fade-in" style="animation-delay: 0.1s">Mùa Hè</a>
+                <a href="#" class="block px-4 py-2.5 text-gray-400 text-sm hover:bg-[#2a2a2a] hover:text-[#b8e62e] transition-all duration-300 rounded-lg animate-fade-in" style="animation-delay: 0.15s">Mùa Thu</a>
+              </div>
+            </transition>
+          </div>
+
+          <router-link 
+            to="/thu-vien" 
+            class="block px-4 py-3 text-gray-300 hover:bg-[#2a2a2a] hover:text-[#b8e62e] font-semibold text-sm tracking-wide transition-all duration-300 rounded-lg animate-slide-in-left" 
+            style="animation-delay: 0.3s"
+          >
+            THƯ VIỆN
+          </router-link>
+          
+          <router-link 
+            to="/lich-chieu" 
+            class="block px-4 py-3 text-gray-300 hover:bg-[#2a2a2a] hover:text-[#b8e62e] font-semibold text-sm tracking-wide transition-all duration-300 rounded-lg animate-slide-in-left" 
+            style="animation-delay: 0.35s"
+          >
+            LỊCH CHIẾU
+          </router-link>
+
+          <!-- Mobile Login / User Info -->
+          <div v-if="!authStore.isAuthenticated" class="px-4 pt-2 animate-slide-in-left" style="animation-delay: 0.4s">
+            <router-link 
+              to="/auth" 
+              class="block bg-gradient-to-r from-red-600 to-red-500 hover:from-red-500 hover:to-red-600 text-white px-6 py-3 rounded-lg font-bold text-sm text-center transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-red-500/50 active:scale-95"
+            >
+              ĐĂNG NHẬP
+            </router-link>
+          </div>
+          
+          <div v-else class="border-t border-gray-700/50 pt-4 mt-4 animate-slide-in-left" style="animation-delay: 0.4s">
+            <div class="flex items-center gap-3 px-4 py-3 mb-2">
+              <div class="w-12 h-12 rounded-full bg-gradient-to-r from-[#b8e62e] to-[#a0d020] text-black font-black text-xl flex items-center justify-center shrink-0">
+                {{ authStore.avatarLetter }}
+              </div>
+              <div class="flex-1 min-w-0">
+                <p class="text-white font-bold text-sm truncate">{{ authStore.user.username }}</p>
+                <p class="text-gray-400 text-xs truncate">{{ authStore.user.email }}</p>
+              </div>
+            </div>
+            <div class="space-y-1">
+              <router-link 
+                to="/profile" 
+                class="flex items-center gap-3 px-4 py-2.5 text-gray-300 text-sm hover:bg-[#2a2a2a] hover:text-[#b8e62e] transition-all duration-300 rounded-lg"
+              >
+                <font-awesome-icon icon="user" class="text-sm w-4" />
+                Trang cá nhân
+              </router-link>
+              <router-link 
+                to="/favorites" 
+                class="flex items-center gap-3 px-4 py-2.5 text-gray-300 text-sm hover:bg-[#2a2a2a] hover:text-[#b8e62e] transition-all duration-300 rounded-lg"
+              >
+                <font-awesome-icon icon="heart" class="text-sm w-4" />
+                Yêu thích
+              </router-link>
+              <router-link 
+                to="/history" 
+                class="flex items-center gap-3 px-4 py-2.5 text-gray-300 text-sm hover:bg-[#2a2a2a] hover:text-[#b8e62e] transition-all duration-300 rounded-lg"
+              >
+                <font-awesome-icon icon="clock" class="text-sm w-4" />
+                Lịch sử
+              </router-link>
+              <router-link 
+                v-if="authStore.isAdmin" 
+                to="/admin" 
+                class="flex items-center gap-3 px-4 py-2.5 text-[#b8e62e] text-sm hover:bg-[#2a2a2a] transition-all duration-300 rounded-lg"
+              >
+                <font-awesome-icon icon="shield" class="text-sm w-4" />
+                Quản trị
+              </router-link>
+              <button 
+                @click="handleLogout" 
+                class="flex items-center gap-3 px-4 py-2.5 text-red-400 hover:text-red-300 hover:bg-[#2a2a2a] text-sm transition-all duration-300 rounded-lg w-full text-left"
+              >
+                <font-awesome-icon icon="sign-out-alt" class="text-sm w-4" />
+                Đăng xuất
+              </button>
+            </div>
           </div>
         </div>
       </transition>
-
-      <!-- Mobile Menu -->
-      <transition name="slide-down">
-        <div v-if="isMobileMenuOpen" class="md:hidden mt-4 pb-4">
-          <nav class="flex flex-col space-y-1">
-            <router-link to="/" class="mobile-nav-item animate-slide-in-left" style="animation-delay: 0.05s">
-              TRANG CHỦ
-            </router-link>
-            
-            <div class="animate-slide-in-left" style="animation-delay: 0.1s">
-              <button 
-                class="mobile-nav-item w-full flex items-center justify-between"
-                @click="toggleMobileDropdown('dangAnime')"
-              >
-                <span>DẠNG ANIME</span>
-                <font-awesome-icon 
-                  icon="chevron-down"
-                  class="w-4 h-4 transition-transform duration-200" 
-                  :class="{ 'rotate-180': openMobileDropdown === 'dangAnime' }"
-                />
-              </button>
-              <transition name="slide-down">
-                <div v-if="openMobileDropdown === 'dangAnime'" class="pl-4 mt-1 space-y-1">
-                  <a href="#" class="mobile-dropdown-item animate-fade-in" style="animation-delay: 0.05s">TV Series</a>
-                  <a href="#" class="mobile-dropdown-item animate-fade-in" style="animation-delay: 0.1s">Movie</a>
-                  <a href="#" class="mobile-dropdown-item animate-fade-in" style="animation-delay: 0.15s">OVA</a>
-                </div>
-              </transition>
-            </div>
-
-            <div class="animate-slide-in-left" style="animation-delay: 0.15s">
-              <button 
-                class="mobile-nav-item w-full flex items-center justify-between"
-                @click="toggleMobileDropdown('topAnime')"
-              >
-                <span>TOP ANIME</span>
-                <font-awesome-icon 
-                  icon="chevron-down"
-                  class="w-4 h-4 transition-transform duration-200" 
-                  :class="{ 'rotate-180': openMobileDropdown === 'topAnime' }"
-                />
-              </button>
-              <transition name="slide-down">
-                <div v-if="openMobileDropdown === 'topAnime'" class="pl-4 mt-1 space-y-1">
-                  <a href="#" class="mobile-dropdown-item animate-fade-in" style="animation-delay: 0.05s">Top 100</a>
-                  <a href="#" class="mobile-dropdown-item animate-fade-in" style="animation-delay: 0.1s">Phổ biến</a>
-                </div>
-              </transition>
-            </div>
-
-            <div class="animate-slide-in-left" style="animation-delay: 0.2s">
-              <button 
-                class="mobile-nav-item w-full flex items-center justify-between"
-                @click="toggleMobileDropdown('theLoai')"
-              >
-                <span>THỂ LOẠI</span>
-                <font-awesome-icon 
-                  icon="chevron-down"
-                  class="w-4 h-4 transition-transform duration-200" 
-                  :class="{ 'rotate-180': openMobileDropdown === 'theLoai' }"
-                />
-              </button>
-              <transition name="slide-down">
-                <div v-if="openMobileDropdown === 'theLoai'" class="pl-4 mt-1 space-y-1">
-                  <a href="#" class="mobile-dropdown-item animate-fade-in" style="animation-delay: 0.05s">Action</a>
-                  <a href="#" class="mobile-dropdown-item animate-fade-in" style="animation-delay: 0.1s">Romance</a>
-                  <a href="#" class="mobile-dropdown-item animate-fade-in" style="animation-delay: 0.15s">Comedy</a>
-                  <a href="#" class="mobile-dropdown-item animate-fade-in" style="animation-delay: 0.2s">Drama</a>
-                </div>
-              </transition>
-            </div>
-
-            <div class="animate-slide-in-left" style="animation-delay: 0.25s">
-              <button 
-                class="mobile-nav-item w-full flex items-center justify-between"
-                @click="toggleMobileDropdown('season')"
-              >
-                <span>SEASON</span>
-                <font-awesome-icon 
-                  icon="chevron-down"
-                  class="w-4 h-4 transition-transform duration-200" 
-                  :class="{ 'rotate-180': openMobileDropdown === 'season' }"
-                />
-              </button>
-              <transition name="slide-down">
-                <div v-if="openMobileDropdown === 'season'" class="pl-4 mt-1 space-y-1">
-                  <a href="#" class="mobile-dropdown-item animate-fade-in" style="animation-delay: 0.05s">Mùa Đông</a>
-                  <a href="#" class="mobile-dropdown-item animate-fade-in" style="animation-delay: 0.1s">Mùa Xuân</a>
-                  <a href="#" class="mobile-dropdown-item animate-fade-in" style="animation-delay: 0.15s">Mùa Hè</a>
-                  <a href="#" class="mobile-dropdown-item animate-fade-in" style="animation-delay: 0.2s">Mùa Thu</a>
-                </div>
-              </transition>
-            </div>
-
-            <router-link to="/thu-vien" class="mobile-nav-item animate-slide-in-left" style="animation-delay: 0.3s">
-              THƯ VIỆN
-            </router-link>
-            <router-link to="/lich-chieu" class="mobile-nav-item animate-slide-in-left" style="animation-delay: 0.35s">
-              LỊCH CHIẾU
-            </router-link>
-
-            <!-- Mobile Login Button - Changed to router-link -->
-            <router-link 
-              to="/auth" 
-              class="bg-[#d32f2f] hover:bg-[#b71c1c] text-white px-6 py-3 rounded font-semibold text-sm transition-all duration-300 mt-4 hover:scale-105 hover:shadow-lg active:scale-95 animate-slide-in-left block text-center" 
-              style="animation-delay: 0.4s"
-            >
-              Đăng nhập
-            </router-link>
-          </nav>
-        </div>
-      </transition>
-    </div>
+    </nav>
   </header>
 </template>
 
-<!-- Script và Style giữ nguyên -->
-<script>
-export default {
-  name: 'Header',
-  data() {
-    return {
-      isMobileMenuOpen: false,
-      isSearchOpen: false,
-      openMobileDropdown: null
-    }
-  },
-  methods: {
-    toggleMobileMenu() {
-      this.isMobileMenuOpen = !this.isMobileMenuOpen
-      if (this.isMobileMenuOpen) {
-        this.isSearchOpen = false
-      }
-    },
-    toggleSearch() {
-      this.isSearchOpen = !this.isSearchOpen
-      if (this.isSearchOpen) {
-        this.isMobileMenuOpen = false
-        this.$nextTick(() => {
-          this.$refs.mobileSearchInput?.focus()
-        })
-      }
-    },
-    toggleMobileDropdown(dropdown) {
-      if (this.openMobileDropdown === dropdown) {
-        this.openMobileDropdown = null
-      } else {
-        this.openMobileDropdown = dropdown
-      }
-    }
-  },
-  watch: {
-    '$route'() {
-      this.isMobileMenuOpen = false
-      this.isSearchOpen = false
-    }
-  },
-  mounted() {
-    document.addEventListener('click', (e) => {
-      const header = this.$el
-      if (!header.contains(e.target)) {
-        this.isMobileMenuOpen = false
-        this.isSearchOpen = false
-      }
-    })
+<style scoped>
+/* Animations */
+@keyframes slide-in-left {
+  from {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
   }
 }
-</script>
 
-<style scoped>
-/* Style giữ nguyên như cũ */
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(-10px); }
-  to { opacity: 1; transform: translateY(0); }
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
-@keyframes slideInLeft {
-  from { opacity: 0; transform: translateX(-30px); }
-  to { opacity: 1; transform: translateX(0); }
+.animate-slide-in-left {
+  animation: slide-in-left 0.3s ease-out forwards;
 }
 
-@keyframes slideInRight {
-  from { opacity: 0; transform: translateX(30px); }
-  to { opacity: 1; transform: translateX(0); }
+.animate-fade-in {
+  animation: fade-in 0.3s ease-out forwards;
 }
 
-@keyframes scaleIn {
-  from { opacity: 0; transform: scale(0.9); }
-  to { opacity: 1; transform: scale(1); }
-}
-
-@keyframes rotateIn {
-  from { opacity: 0; transform: rotate(-90deg); }
-  to { opacity: 1; transform: rotate(0); }
-}
-
-@keyframes pulseSlow {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.5; }
-}
-
-.animate-fade-in { animation: fadeIn 0.5s ease-out forwards; opacity: 0; }
-.animate-slide-in-left { animation: slideInLeft 0.5s ease-out forwards; opacity: 0; }
-.animate-slide-in-right { animation: slideInRight 0.5s ease-out forwards; opacity: 0; }
-.animate-scale-in { animation: scaleIn 0.3s ease-out forwards; }
-.animate-rotate-in { animation: rotateIn 0.3s ease-out forwards; }
-.animate-pulse-slow { animation: pulseSlow 2s ease-in-out infinite; }
-
-.nav-item {
-  @apply text-white text-sm font-semibold cursor-pointer py-2.5 px-0 transition-all duration-300 whitespace-nowrap relative;
-}
-
-.nav-item::after {
-  content: '';
-  position: absolute;
-  bottom: 0;
-  left: 50%;
-  width: 0;
-  height: 3px;
-  background: #b8e62e;
+/* Transition for dropdowns */
+.slide-down-enter-active,
+.slide-down-leave-active {
   transition: all 0.3s ease;
-  transform: translateX(-50%);
 }
 
-.nav-item:hover::after { width: 100%; }
-.nav-item:hover { @apply text-[#b8e62e]; transform: translateY(-2px); }
-.nav-item.router-link-active { @apply text-[#b8e62e]; }
-.nav-item.router-link-active::after { width: 100%; }
-
-.dropdown-menu {
-  @apply absolute top-full left-0 bg-[#2a2a2a] min-w-[200px] rounded shadow-xl mt-2 py-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible;
-  transition: all 0.3s ease;
+.slide-down-enter-from {
+  opacity: 0;
   transform: translateY(-10px);
 }
 
-.group:hover .dropdown-menu { transform: translateY(0); }
-
-.dropdown-item {
-  @apply block px-4 py-2 text-white text-sm hover:bg-[#3a3a3a] hover:text-[#b8e62e] transition-all duration-200;
-}
-
-.dropdown-item:hover { transform: translateX(5px); padding-left: 1.25rem; }
-
-.mobile-nav-item {
-  @apply text-white text-sm font-semibold px-4 py-3 rounded hover:bg-[#2a2a2a] hover:text-[#b8e62e] transition-all duration-200;
-}
-
-.mobile-nav-item:hover { transform: translateX(5px); }
-.mobile-nav-item.router-link-active { @apply text-[#b8e62e] bg-[#2a2a2a]; }
-
-.mobile-dropdown-item {
-  @apply block text-gray-300 text-sm px-4 py-2 rounded hover:bg-[#2a2a2a] hover:text-[#b8e62e] transition-all duration-200;
-}
-
-.mobile-dropdown-item:hover { transform: translateX(5px); }
-
-.slide-down-enter-active { animation: slideDown 0.3s ease-out; }
-.slide-down-leave-active { animation: slideDown 0.3s ease-in reverse; }
-
-@keyframes slideDown {
-  from { max-height: 0; opacity: 0; transform: translateY(-10px); }
-  to { max-height: 1000px; opacity: 1; transform: translateY(0); }
+.slide-down-leave-to {
+  opacity: 0;
+  transform: translateY(-10px);
 }
 </style>

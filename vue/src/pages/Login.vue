@@ -1,23 +1,57 @@
 <script setup>
 import { ref } from 'vue'
+import { useAuthStore } from '@/stores/auth.store'  // ✅ FIX: Import store
+import { useToast } from 'vue-toastification'
+import { useRouter } from 'vue-router'
 
 const emit = defineEmits(['toggle'])
+const authStore = useAuthStore()  // ✅ FIX: Dùng store
+const toast = useToast()
+const router = useRouter()
 
 const email = ref('')
 const password = ref('')
 const rememberMe = ref(false)
-const isLoading = ref(false)
 
 const handleLogin = async () => {
-  isLoading.value = true
-  setTimeout(() => {
-    isLoading.value = false
-    console.log('Login:', { email: email.value, password: password.value })
-  }, 1500)
+  authStore.clearError()
+
+  // Call API
+  const result = await authStore.login({
+    email: email.value,
+    password: password.value
+  }, rememberMe.value)
+
+  if (result.success) {
+    toast.success('Đăng nhập thành công!')
+    
+    // ✅ Đợi 500ms để state kịp cập nhật
+    setTimeout(() => {
+      router.push('/')
+    }, 500)
+    
+    // Reset form
+    email.value = ''
+    password.value = ''
+    rememberMe.value = false
+  } else {
+    if (result.error?.errors) {
+      result.error.errors.forEach(err => {
+        toast.error(err.msg)
+      })
+    } else {
+      toast.error(result.error?.message || 'Đăng nhập thất bại')
+    }
+  }
 }
 
-const loginWithGoogle = () => console.log('Google')
-const loginWithFacebook = () => console.log('Facebook')
+const loginWithGoogle = () => {
+  toast.info('Tính năng đang phát triển')
+}
+
+const loginWithFacebook = () => {
+  toast.info('Tính năng đang phát triển')
+}
 </script>
 
 <template>
@@ -28,7 +62,6 @@ const loginWithFacebook = () => console.log('Facebook')
     <!-- Main Card -->
     <div class="relative bg-gradient-to-br from-[#1a1a1a] via-[#1f1f1f] to-[#0f1416] rounded-3xl shadow-2xl overflow-hidden border border-gray-800/50 backdrop-blur-xl">
       
-      <!-- Form Only -->
       <div class="flex flex-col justify-center p-8 sm:p-10">
         <div class="w-full max-w-sm mx-auto space-y-5">
           
@@ -93,19 +126,19 @@ const loginWithFacebook = () => console.log('Facebook')
               </div>
             </div>
 
-           <div class="flex items-center justify-between text-xs pt-1">
-            <label class="flex items-center gap-1.5 cursor-pointer group">
-              <input v-model="rememberMe" type="checkbox" class="w-3.5 h-3.5 rounded border-gray-700 bg-[#2a2a2a] text-[#b8e62e] focus:ring-2 focus:ring-[#b8e62e]/20 cursor-pointer" />
-              <span class="text-gray-400 group-hover:text-white font-semibold">Ghi nhớ</span>
-            </label>
-            <router-link to="/forgot-password" class="text-[#b8e62e] hover:text-[#a0d020] font-bold underline underline-offset-2 transition-colors">
-              Quên mật khẩu?
-            </router-link>
-          </div>
+            <div class="flex items-center justify-between text-xs pt-1">
+              <label class="flex items-center gap-1.5 cursor-pointer group">
+                <input v-model="rememberMe" type="checkbox" class="w-3.5 h-3.5 rounded border-gray-700 bg-[#2a2a2a] text-[#b8e62e] focus:ring-2 focus:ring-[#b8e62e]/20 cursor-pointer" />
+                <span class="text-gray-400 group-hover:text-white font-semibold">Ghi nhớ</span>
+              </label>
+              <router-link to="/forgot-password" class="text-[#b8e62e] hover:text-[#a0d020] font-bold underline underline-offset-2 transition-colors">
+                Quên mật khẩu?
+              </router-link>
+            </div>
 
-            <button type="submit" :disabled="isLoading" class="w-full bg-gradient-to-r from-[#b8e62e] to-[#a0d020] hover:from-[#a0d020] hover:to-[#b8e62e] disabled:from-gray-700 disabled:to-gray-700 text-black disabled:text-gray-500 font-black py-2.5 rounded-xl transition-all duration-300 hover:scale-105 hover:shadow-2xl hover:shadow-[#b8e62e]/50 active:scale-95 flex items-center justify-center gap-2 text-sm mt-4">
-              <font-awesome-icon v-if="isLoading" icon="clock" class="animate-spin" />
-              <span>{{ isLoading ? 'Đang đăng nhập...' : 'Đăng nhập ngay' }}</span>
+            <button type="submit" :disabled="authStore.isLoading" class="w-full bg-gradient-to-r from-[#b8e62e] to-[#a0d020] hover:from-[#a0d020] hover:to-[#b8e62e] disabled:from-gray-700 disabled:to-gray-700 text-black disabled:text-gray-500 font-black py-2.5 rounded-xl transition-all duration-300 hover:scale-105 hover:shadow-2xl hover:shadow-[#b8e62e]/50 active:scale-95 flex items-center justify-center gap-2 text-sm mt-4">
+              <font-awesome-icon v-if="authStore.isLoading" icon="clock" class="animate-spin" />
+              <span>{{ authStore.isLoading ? 'Đang đăng nhập...' : 'Đăng nhập ngay' }}</span>
             </button>
           </form>
 
@@ -126,7 +159,6 @@ const loginWithFacebook = () => console.log('Facebook')
 </template>
 
 <style scoped>
-/* Animated Border Pulse */
 @keyframes border-pulse {
   0%, 100% {
     opacity: 0.75;
