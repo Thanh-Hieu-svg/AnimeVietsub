@@ -1,10 +1,11 @@
 const express = require('express');
-const cors = require('cors');  // ✅ Import cors
+const cors = require('cors');
 const swaggerUi = require('swagger-ui-express');
 const swaggerSpecs = require('./swagger/swagger');
 const sequelize = require('./config/db');
 const authRoutes = require('./routes/authRoutes');
 const errorHandler = require('./middlewares/errorHandler');
+const createAdminAccount = require('./scripts/CreateAdmin');
 
 const app = express();
 
@@ -46,6 +47,7 @@ app.listen(3000, async () => {
   try {
     await sequelize.authenticate();
     console.log('✅ Kết nối database thành công!');
+    await createAdminAccount();
   } catch (error) {
     console.error('❌ Lỗi kết nối database:', error.message);
   }

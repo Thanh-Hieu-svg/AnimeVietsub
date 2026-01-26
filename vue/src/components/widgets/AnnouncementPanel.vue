@@ -21,14 +21,7 @@ const items = [
       { label: "Discord", type: "discord", icon: "discord" },
     ],
   },
-  {
-    icon: "shuffle",
-    title: "XEM NGẪU NHIÊN",
-    desc: "Khám phá anime mới với thuật toán gợi ý thông minh!",
-    actions: [
-      { label: "KHÁM PHÁ NGAY", type: "random", icon: "play" },
-    ],
-  },
+  
   {
     icon: "database",
     title: "KHÔI PHỤC DỮ LIỆU",

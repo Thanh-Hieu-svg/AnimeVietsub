@@ -1,13 +1,14 @@
 <script setup>
 import { ref } from 'vue'
-import { useAuthStore } from '@/stores/auth.store'  // ✅ FIX: Import store
+import { useAuthStore } from '@/stores/auth.store'
 import { useToast } from 'vue-toastification'
-import { useRouter } from 'vue-router'
+import { useRouter, useRoute } from 'vue-router'
 
 const emit = defineEmits(['toggle'])
-const authStore = useAuthStore()  // ✅ FIX: Dùng store
+const authStore = useAuthStore()
 const toast = useToast()
 const router = useRouter()
+const route = useRoute()
 
 const email = ref('')
 const password = ref('')
@@ -16,7 +17,6 @@ const rememberMe = ref(false)
 const handleLogin = async () => {
   authStore.clearError()
 
-  // Call API
   const result = await authStore.login({
     email: email.value,
     password: password.value
@@ -25,9 +25,21 @@ const handleLogin = async () => {
   if (result.success) {
     toast.success('Đăng nhập thành công!')
     
-    // ✅ Đợi 500ms để state kịp cập nhật
+    // ✅ Redirect dựa trên role
     setTimeout(() => {
-      router.push('/')
+      const user = authStore.user
+      const redirectPath = route.query.redirect
+      
+      if (redirectPath) {
+        // Nếu có redirect URL từ route guard
+        router.push(redirectPath)
+      } else if (user.role === 'admin') {
+        // Admin → /admin
+        router.push('/admin')
+      } else {
+        // User → /
+        router.push('/')
+      }
     }, 500)
     
     // Reset form

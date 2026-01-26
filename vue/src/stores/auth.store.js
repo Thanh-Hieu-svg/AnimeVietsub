@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { authAPI } from '../api/auth'
+import { jwtDecode } from 'jwt-decode'
 
 export const useAuthStore = defineStore('auth', () => {
   const user = ref(null)
@@ -10,11 +11,22 @@ export const useAuthStore = defineStore('auth', () => {
 
   const isAuthenticated = computed(() => !!token.value)
   const isAdmin = computed(() => user.value?.role === 'admin')
+  const isUser = computed(() => user.value?.role === 'user')
   
   const avatarLetter = computed(() => {
     if (!user.value?.username) return '?'
     return user.value.username.charAt(0).toUpperCase()
   })
+
+  // ✅ Kiểm tra token expiry
+  const isTokenExpired = (token) => {
+    try {
+      const decoded = jwtDecode(token)
+      return decoded.exp * 1000 < Date.now()
+    } catch {
+      return true
+    }
+  }
 
   // Register
   const register = async (userData) => {
@@ -42,16 +54,15 @@ export const useAuthStore = defineStore('auth', () => {
       const response = await authAPI.login(credentials)
       const { token: newToken, data } = response.data
       
-      // ✅ Cập nhật state TRƯỚC khi lưu storage
       token.value = newToken
       user.value = data
       
-      // Sau đó mới lưu vào storage
       const storage = rememberMe ? localStorage : sessionStorage
       storage.setItem('token', newToken)
       storage.setItem('user', JSON.stringify(data))
 
       console.log('✅ User logged in:', user.value)
+      console.log('✅ Role:', user.value.role)
 
       return { success: true, data: response.data }
     } catch (err) {
@@ -73,21 +84,32 @@ export const useAuthStore = defineStore('auth', () => {
     token.value = null
   }
 
-  // Restore session from storage
+  // ✅ Restore session với token validation
   const restoreSession = () => {
     const savedToken = localStorage.getItem('token') || sessionStorage.getItem('token')
     const savedUser = localStorage.getItem('user') || sessionStorage.getItem('user')
     
     if (savedToken && savedUser) {
+      // Kiểm tra token expiry
+      if (isTokenExpired(savedToken)) {
+        console.log('❌ Token expired, logging out')
+        logout()
+        return false
+      }
+
       token.value = savedToken
       try {
         user.value = JSON.parse(savedUser)
         console.log('✅ Session restored:', user.value)
+        console.log('✅ Role:', user.value.role)
+        return true
       } catch (error) {
         console.error('❌ Error parsing user data:', error)
         logout()
+        return false
       }
     }
+    return false
   }
 
   const clearError = () => {
@@ -101,6 +123,7 @@ export const useAuthStore = defineStore('auth', () => {
     error,
     isAuthenticated,
     isAdmin,
+    isUser,
     avatarLetter,
     register,
     login,

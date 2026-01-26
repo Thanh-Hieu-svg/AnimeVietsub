@@ -1,11 +1,13 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import LayoutUser from '@/components/layout/LayoutUser.vue'
 import LayoutAdmin from '@/components/layout/LayoutAdmin.vue'
+import { useAuthStore } from '@/stores/auth.store'
 
 const routes = [
   {
     path: '/',
-    component: LayoutUser, 
+    component: LayoutUser,
+    meta: { layout: 'user' },
     children: [
       {
         path: 'login',
@@ -50,7 +52,8 @@ const routes = [
       {
         path: 'profile',
         name: 'profile',
-        component: () => import('@/pages/Profile.vue')
+        component: () => import('@/pages/Profile.vue'),
+        meta: { requiresAuth: true } 
       },
       {
         path: 'anime/new',
@@ -72,6 +75,11 @@ const routes = [
   {
     path: '/admin',
     component: LayoutAdmin,
+    meta: { 
+      layout: 'admin',
+      requiresAuth: true,
+      requiresAdmin: true 
+    },
     children: [
       {
         path: '',
@@ -93,7 +101,7 @@ const routes = [
         name: 'AdminComments',
         component: () => import('@/pages/CommentsManagement.vue')
       },
-       {
+      {
         path: 'categories',
         name: 'AdminCategories',
         component: () => import('@/pages/CategoriesManagement.vue')
@@ -128,14 +136,69 @@ const routes = [
         name: 'AdminProfile',
         component: () => import('@/pages/AdminProfile.vue')
       },
-      
     ]
-  }
+  },
+  // // ✅ 404 Page
+  // {
+  //   path: '/:pathMatch(.*)*',
+  //   name: 'NotFound',
+  //   component: () => import('@/pages/NotFound.vue')
+  // }
 ]
 
 const router = createRouter({
   history: createWebHistory(),
   routes
+})
+
+// ✅ Global Navigation Guard
+router.beforeEach((to, from, next) => {
+  const authStore = useAuthStore()
+  
+  // 1. Restore session nếu chưa có
+  if (!authStore.user && (localStorage.getItem('token') || sessionStorage.getItem('token'))) {
+    authStore.restoreSession()
+  }
+
+  // 2. Kiểm tra route yêu cầu đăng nhập
+  if (to.meta.requiresAuth && !authStore.isAuthenticated) {
+    console.log('❌ Not authenticated, redirect to home')
+    return next({
+      path: '/',
+      query: { redirect: to.fullPath }
+    })
+  }
+
+  // 3. ✅ Kiểm tra route yêu cầu admin
+  if (to.meta.requiresAdmin) {
+    if (!authStore.isAdmin) {
+      console.log('❌ Not admin, redirect to home')
+      // ✅ Toast notification (optional)
+      import('vue-toastification').then(({ useToast }) => {
+        const toast = useToast()
+        toast.error('Bạn không có quyền truy cập trang này!')
+      })
+      return next('/')
+    }
+  }
+
+  // 4. ✅ Redirect admin từ home về dashboard
+  if (to.path === '/' && authStore.isAuthenticated && authStore.isAdmin) {
+    console.log('✅ Admin detected, redirect to /admin')
+    return next('/admin')
+  }
+
+  // 5. ✅ Ngăn user vào /admin thủ công
+  if (to.path.startsWith('/admin') && authStore.isAuthenticated && !authStore.isAdmin) {
+    console.log('❌ User trying to access admin, redirect to home')
+    import('vue-toastification').then(({ useToast }) => {
+      const toast = useToast()
+      toast.error('Bạn không có quyền truy cập trang Admin!')
+    })
+    return next('/')
+  }
+
+  next()
 })
 
 export default router

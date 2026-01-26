@@ -1,4 +1,10 @@
 <script setup>
+import { useAuthStore } from '@/stores/auth.store'
+import { useRouter, useRoute } from 'vue-router'
+import { useToast } from 'vue-toastification'
+import { useAuth } from '../../Composables/useAuth'
+import { computed } from 'vue'
+
 defineProps({
   isOpen: {
     type: Boolean,
@@ -8,39 +14,61 @@ defineProps({
 
 defineEmits(['toggle'])
 
+const authStore = useAuthStore()
+const router = useRouter()
+const route = useRoute()
+const toast = useToast()
+const { logout } = useAuth()
+
 const menuItems = [
   {
-    section: 'DASHBOARDS',
+    section: 'TỔNG QUAN',
     items: [
-      { name: 'Dashboard', icon: 'chart-line', route: '/admin' },
-      { name: 'Analytics', icon: 'chart-bar', route: '/admin/analytics' }
+      { name: 'Bảng điều khiển', icon: 'chart-line', route: '/admin' },
+      { name: 'Phân tích', icon: 'chart-bar', route: '/admin/analytics' }
     ]
   },
   {
-    section: 'MANAGEMENT',
+    section: 'QUẢN LÝ',
     items: [
-      { name: 'Users', icon: 'users', route: '/admin/users' },
+      { name: 'Người dùng', icon: 'users', route: '/admin/users' },
       { name: 'Anime', icon: 'film', route: '/admin/anime' },
-      { name: 'Episodes', icon: 'play-circle', route: '/admin/episodes' },
-      { name: 'Comments', icon: 'comments', route: '/admin/comments' }
+      { name: 'Tập phim', icon: 'play-circle', route: '/admin/episodes' },
+      { name: 'Bình luận', icon: 'comments', route: '/admin/comments' }
     ]
   },
   {
-    section: 'CONTENT',
+    section: 'NỘI DUNG',
     items: [
-      { name: 'Categories', icon: 'folder', route: '/admin/categories' },
+      { name: 'Thể loại', icon: 'folder', route: '/admin/categories' },
       { name: 'Tags', icon: 'tags', route: '/admin/tags' },
-      { name: 'Schedule', icon: 'calendar', route: '/admin/schedule' }
+      { name: 'Lịch chiếu', icon: 'calendar', route: '/admin/schedule' }
     ]
   },
   {
-    section: 'SETTINGS',
+    section: 'CÀI ĐẶT',
     items: [
-      { name: 'Site Settings', icon: 'cog', route: '/admin/settings' },
-      { name: 'Profile', icon: 'user', route: '/admin/profile' }
+      { name: 'Cài đặt trang', icon: 'cog', route: '/admin/settings' },
+      { name: 'Hồ sơ', icon: 'user', route: '/admin/profile' }
     ]
   }
 ]
+
+// ✅ Check if route is active
+const isRouteActive = (itemRoute) => {
+  // Exact match for dashboard
+  if (itemRoute === '/admin' && route.path === '/admin') {
+    return true
+  }
+  // Starts with for other routes
+  if (itemRoute !== '/admin' && route.path.startsWith(itemRoute)) {
+    return true
+  }
+  return false
+}
+
+// ✅ Xử lý logout
+const handleLogout = () => logout()
 </script>
 
 <template>
@@ -58,7 +86,7 @@ const menuItems = [
           isOpen ? 'text-2xl' : 'text-xl'
         ]"
       >
-        {{ isOpen ? 'AnimeVietsub' : 'AA' }}
+        {{ isOpen ? 'AnimeVietsub' : 'AV' }}
       </h2>
     </div>
 
@@ -80,21 +108,37 @@ const menuItems = [
             v-for="item in menu.items"
             :key="item.route"
             :to="item.route"
-            class="flex items-center gap-3 px-3 py-3 rounded-xl transition-all duration-300 group text-gray-400 hover:text-white relative overflow-hidden"
+            :class="[
+              'flex items-center gap-3 px-3 py-3 rounded-xl transition-all duration-300 group relative overflow-hidden',
+              isRouteActive(item.route)
+                ? 'bg-gradient-to-r from-[#b8e62e] to-[#a0d020] text-black shadow-xl shadow-[#b8e62e]/30'
+                : 'text-gray-400 hover:text-white'
+            ]"
           >
-            <!-- Hover Background -->
-            <div class="absolute inset-0 bg-gradient-to-r from-[#b8e62e]/10 to-transparent opacity-0 group-hover:opacity-100 transition-all duration-300 rounded-xl"></div>
+            <!-- Hover Background (chỉ show khi không active) -->
+            <div 
+              v-if="!isRouteActive(item.route)"
+              class="absolute inset-0 bg-gradient-to-r from-[#b8e62e]/10 to-transparent opacity-0 group-hover:opacity-100 transition-all duration-300 rounded-xl"
+            ></div>
             
             <!-- Icon -->
             <font-awesome-icon 
               :icon="item.icon" 
-              class="text-lg transition-all duration-300 group-hover:scale-110 group-hover:text-[#b8e62e] relative z-10"
+              :class="[
+                'text-lg transition-all duration-300 relative z-10',
+                isRouteActive(item.route)
+                  ? 'text-black'
+                  : 'group-hover:scale-110 group-hover:text-[#b8e62e]'
+              ]"
             />
             
             <!-- Text -->
             <span 
               v-if="isOpen"
-              class="font-semibold text-sm transition-all duration-300 relative z-10"
+              :class="[
+                'font-semibold text-sm transition-all duration-300 relative z-10',
+                isRouteActive(item.route) ? 'text-black' : ''
+              ]"
             >
               {{ item.name }}
             </span>
@@ -103,10 +147,12 @@ const menuItems = [
       </div>
     </nav>
 
-    <!-- Logout Button -->
+    <!-- ✅ Logout Button -->
     <div class="absolute bottom-4 left-0 right-0 px-3 border-t border-gray-800/50 pt-4">
       <button
+        @click="handleLogout"
         class="w-full flex items-center gap-3 px-3 py-3 rounded-xl text-red-400 hover:text-red-300 hover:bg-red-500/10 transition-all duration-300 group relative overflow-hidden"
+        :title="isOpen ? '' : 'Đăng xuất'"
       >
         <div class="absolute inset-0 bg-gradient-to-r from-red-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-all duration-300"></div>
         <font-awesome-icon icon="sign-out-alt" class="text-lg group-hover:scale-110 transition-transform duration-300 relative z-10" />
@@ -144,15 +190,10 @@ nav::-webkit-scrollbar-thumb:hover {
   background: rgba(184, 230, 46, 0.5);
 }
 
-/* Active Route */
+/* ✅ Remove default active classes */
 .router-link-active,
 .router-link-exact-active {
-  @apply bg-gradient-to-r from-[#b8e62e] to-[#a0d020] text-black shadow-xl shadow-[#b8e62e]/30;
-}
-
-.router-link-active .font-awesome-icon,
-.router-link-exact-active .font-awesome-icon {
-  @apply text-black;
+  /* Không apply styles mặc định */
 }
 
 /* Animations */

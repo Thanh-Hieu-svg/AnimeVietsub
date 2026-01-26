@@ -70,11 +70,12 @@ import {
   faPlus,
   faUserCircle,
   faUser,
-  faImages,      
-  faAward,     
-  faFolder,    
+  faImages,
+  faAward,
+  faFolder,
   faChartBar,
-  faShuffle
+  faShuffle,
+  faBell
 } from '@fortawesome/free-solid-svg-icons'
 
 import {
@@ -158,11 +159,12 @@ library.add(
   faPlus,
   faUserCircle,
   faUser,
-  faImages,      
-  faAward,      
-  faFolder,      
+  faImages,
+  faAward,
+  faFolder,
   faChartBar,
-  faShuffle     
+  faShuffle,
+  faBell
 )
 
 export default FontAwesomeIcon
